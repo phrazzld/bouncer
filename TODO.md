@@ -11,7 +11,7 @@
         1. `ls` command shows `package.json` in the root directory.
     - **Depends‑on:** none
 
-- [ ] **T002 · Chore · P0: install core dependencies**
+- [x] **T002 · Chore · P0: install core dependencies**
     - **Context:** PLAN.md §5.1 Bootstrap
     - **Action:**
         1. Run `pnpm add @google/genai dotenv`.
