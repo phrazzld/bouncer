@@ -1,49 +1,48 @@
 # Bouncer – Task Breakdown
 
 ## Project Bootstrap
-- [x] **T001 · Chore · P0: create project directory and initialize npm project**
+- [x] **T001 · Chore · P0: initialize project with pnpm**
     - **Context:** PLAN.md §5.1 Bootstrap
     - **Action:**
-        1. Create the root `/bouncer` directory for the project.
-        2. Run `pnpm init` in the `/bouncer` directory.
+        1. Run `pnpm init` in the current directory.
     - **Done‑when:**
-        1. The `/bouncer` directory exists with a valid `package.json`.
+        1. A valid `package.json` exists in the project root.
     - **Verification:**
-        1. `ls` command shows the `bouncer` directory with `package.json`.
+        1. `ls` command shows `package.json` in the root directory.
     - **Depends‑on:** none
 
 - [ ] **T002 · Chore · P0: install core dependencies**
     - **Context:** PLAN.md §5.1 Bootstrap
     - **Action:**
-        1. In the `/bouncer` directory, run `npm i @google/genai dotenv`.
+        1. Run `pnpm add @google/genai dotenv`.
     - **Done‑when:**
         1. `@google/genai` and `dotenv` are listed as dependencies in `package.json`.
         2. `node_modules` directory contains these packages.
     - **Verification:**
-        1. `npm ls @google/genai dotenv` shows both installed.
+        1. `pnpm list @google/genai dotenv` shows both installed.
     - **Depends‑on:** [T001]
 
-- [ ] **T003 · Chore · P0: create placeholder files and directory structure**
+- [ ] **T003 · Chore · P0: create placeholder files**
     - **Context:** PLAN.md §4 Directory Layout
     - **Action:**
-        1. In the `/bouncer` directory, create files: `bouncer.js`, `rules.md`, `.bouncer.log.jsonl`, `.env`.
+        1. Create files: `bouncer.js`, `rules.md`, `.bouncer.log.jsonl`, `.env`.
     - **Done‑when:**
-        1. All required files exist in the `/bouncer` directory.
+        1. All required files exist in the project root.
     - **Verification:**
-        1. `ls -la bouncer/` shows all specified files.
+        1. `ls -la` shows all specified files.
     - **Depends‑on:** [T001]
 
 ## Environment Configuration
 - [ ] **T004 · Chore · P0: configure `.env` for API key and add to `.gitignore`**
     - **Context:** PLAN.md §2 Auth, §4 Directory Layout
     - **Action:**
-        1. Add the line `GEMINI_API_KEY=""` to `bouncer/.env`.
-        2. Create `bouncer/.gitignore` if it doesn't exist, and add the line `.env` to it.
+        1. Add the line `GEMINI_API_KEY=""` to `.env`.
+        2. Ensure `.gitignore` includes the line `.env` to prevent tracking.
     - **Done‑when:**
-        1. `bouncer/.env` contains the `GEMINI_API_KEY` placeholder.
-        2. `bouncer/.gitignore` exists and lists `.env` to prevent tracking.
+        1. `.env` contains the `GEMINI_API_KEY` placeholder.
+        2. `.gitignore` exists and lists `.env` to prevent tracking.
     - **Verification:**
-        1. `cat bouncer/.env` shows the placeholder.
+        1. `cat .env` shows the placeholder.
         2. `git status` (after staging `.gitignore`) shows `.env` as untracked or ignored.
     - **Depends‑on:** [T003]
 
@@ -51,18 +50,18 @@
 - [ ] **T005 · Feature · P0: populate `rules.md` with template rules**
     - **Context:** PLAN.md §3 Rule-Set, §5.2 Write rules.md
     - **Action:**
-        1. Edit `bouncer/rules.md` to include the five example rules listed in PLAN.md.
+        1. Edit `rules.md` to include the five example rules listed in PLAN.md.
     - **Done‑when:**
-        1. `bouncer/rules.md` contains the specified template rules.
+        1. `rules.md` contains the specified template rules.
     - **Verification:**
-        1. View `bouncer/rules.md`; content matches PLAN.md example.
+        1. View `rules.md`; content matches PLAN.md example.
     - **Depends‑on:** [T003]
 
 ## Main Script (`bouncer.js`) - Core Logic
 - [ ] **T006 · Feature · P0: implement script boilerplate and AI client initialization**
     - **Context:** PLAN.md §5.3 bouncer.js skeleton
     - **Action:**
-        1. Add `#!/usr/bin/env node` shebang to the top of `bouncer/bouncer.js`.
+        1. Add `#!/usr/bin/env node` shebang to the top of `bouncer.js`.
         2. Add required import statements (`fs`, `child_process`, `@google/genai`, `dotenv/config`).
         3. Initialize the `GoogleGenAI` client using `process.env.GEMINI_API_KEY`.
     - **Done‑when:**
