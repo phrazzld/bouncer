@@ -58,7 +58,7 @@
     - **Depends‑on:** [T003]
 
 ## Main Script (`bouncer.js`) - Core Logic
-- [ ] **T006 · Feature · P0: implement script boilerplate and AI client initialization**
+- [x] **T006 · Feature · P0: implement script boilerplate and AI client initialization**
     - **Context:** PLAN.md §5.3 bouncer.js skeleton
     - **Action:**
         1. Add `#!/usr/bin/env node` shebang to the top of `bouncer.js`.
