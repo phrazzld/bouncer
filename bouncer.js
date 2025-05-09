@@ -35,3 +35,21 @@ PASS – if all rules satisfied
 or
 FAIL – if any rule violated
 And give a brief justification (<40 words).`;
+
+// Call the Gemini API with the prompt
+const res = await AI.models.generateContent({
+  model: "gemini-2.5-flash-preview-04-17",
+  contents: prompt,
+  config: { temperature: 0.1, candidateCount: 1 }
+});
+
+// Parse the response to determine the verdict (PASS or FAIL)
+const verdict = /PASS/i.test(res.text) ? "PASS" : "FAIL";
+
+// For verification/testing only - will be expanded in T010 with proper logging and exit code
+console.log(`Verdict: ${verdict}`);
+console.log(`Response: ${res.text.slice(0, 100)}${res.text.length > 100 ? '...' : ''}`);
+
+// Now we have the verdict and response, the next step will be to:
+// 1. Log the results (T010)
+// 2. Exit with appropriate code based on verdict (T010)

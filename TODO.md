@@ -94,7 +94,7 @@
         1. Generated prompt follows the format specified in PLAN.md.
     - **Depends‑on:** [T005, T007]
 
-- [ ] **T009 · Feature · P0: implement Gemini API call and response handling**
+- [x] **T009 · Feature · P0: implement Gemini API call and response handling**
     - **Context:** PLAN.md §5.3 bouncer.js skeleton, §2 Gemini API
     - **Action:**
         1. Call the Gemini API with the constructed prompt.
