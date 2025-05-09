@@ -17,3 +17,21 @@ try {
   // Handle case where there's no commit history yet
   commit = "<new>";
 }
+
+// Read rules from rules.md
+const rules = await fs.readFile(new URL("./rules.md", import.meta.url), "utf8");
+
+// Construct the prompt according to the format in PLAN.md
+const prompt = `SYSTEM:
+You are *Bouncer*, an uncompromising reviewer.
+Enforce the following rules:
+${rules}
+
+USER:
+Commit ${commit} diff:
+${diff}
+Return exactly:
+PASS – if all rules satisfied
+or
+FAIL – if any rule violated
+And give a brief justification (<40 words).`;

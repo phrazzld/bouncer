@@ -83,7 +83,7 @@
         1. Code correctly retrieves diff and commit hash in a git repository.
     - **Depends‑on:** [T006]
 
-- [ ] **T008 · Feature · P0: implement rules loading and prompt construction**
+- [x] **T008 · Feature · P0: implement rules loading and prompt construction**
     - **Context:** PLAN.md §5.3 bouncer.js skeleton, §3 Rule-Set
     - **Action:**
         1. Add code to read the rules from `rules.md`.
