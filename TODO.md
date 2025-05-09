@@ -33,7 +33,7 @@
     - **Depends‑on:** [T001]
 
 ## Environment Configuration
-- [ ] **T004 · Chore · P0: configure `.env` for API key and add to `.gitignore`**
+- [x] **T004 · Chore · P0: configure `.env` for API key and add to `.gitignore`**
     - **Context:** PLAN.md §2 Auth, §4 Directory Layout
     - **Action:**
         1. Add the line `GEMINI_API_KEY=""` to `.env`.
