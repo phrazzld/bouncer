@@ -71,7 +71,7 @@
         1. Basic script structure is in place.
     - **Depends‑on:** [T002, T003, T004]
 
-- [ ] **T007 · Feature · P0: implement git diff and commit hash retrieval**
+- [x] **T007 · Feature · P0: implement git diff and commit hash retrieval**
     - **Context:** PLAN.md §5.3 bouncer.js skeleton
     - **Action:**
         1. Add code to execute `git diff --cached --unified=0` and capture the output.
