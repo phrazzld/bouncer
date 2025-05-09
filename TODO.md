@@ -47,7 +47,7 @@
     - **Depends‑on:** [T003]
 
 ## Rule Definition
-- [ ] **T005 · Feature · P0: populate `rules.md` with template rules**
+- [x] **T005 · Feature · P0: populate `rules.md` with template rules**
     - **Context:** PLAN.md §3 Rule-Set, §5.2 Write rules.md
     - **Action:**
         1. Edit `rules.md` to include the five example rules listed in PLAN.md.
