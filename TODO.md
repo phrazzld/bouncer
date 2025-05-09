@@ -22,7 +22,7 @@
         1. `pnpm list @google/genai dotenv` shows both installed.
     - **Depends‑on:** [T001]
 
-- [ ] **T003 · Chore · P0: create placeholder files**
+- [x] **T003 · Chore · P0: create placeholder files**
     - **Context:** PLAN.md §4 Directory Layout
     - **Action:**
         1. Create files: `bouncer.js`, `rules.md`, `.bouncer.log.jsonl`, `.env`.
