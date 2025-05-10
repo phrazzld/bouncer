@@ -205,7 +205,7 @@
     - **Depends‑on:** [T010]
 
 ## Documentation
-- [ ] **T017 · Chore · P1: create README.md with setup and usage instructions**
+- [x] **T017 · Chore · P1: create README.md with setup and usage instructions**
     - **Context:** PLAN.md §Documentation Approach
     - **Action:**
         1. Create `README.md` with project description, setup steps, usage examples.
@@ -216,32 +216,3 @@
         1. Review content for completeness and accuracy.
     - **Depends‑on:** [T013]
 
-## Open Questions & Clarifications
-- [ ] **Issue:** Should API failures (no key, outage) result in blocked commits (hard-fail) or warnings with allowed commits?
-    - **Context:** PLAN.md §7 Edge-Cases & Hardening
-    - **Blocking?:** Yes, decision needed for T015
-    
-- [ ] **Issue:** Is token/quota tracking required for MVP or can it be deferred?
-    - **Context:** PLAN.md §7 Edge-Cases & Hardening
-    - **Blocking?:** No, implemented as P2 in T016
-
-## Future Roadmap (Post-MVP)
-- [ ] **T018 · Feature · P3: implement configurable rule registry (YAML) with per-repo overrides**
-    - **Context:** PLAN.md §8 Roadmap After MVP
-    - **Depends‑on:** [T013]
-
-- [ ] **T019 · Feature · P3: add shared key vault integration for API key**
-    - **Context:** PLAN.md §8 Roadmap After MVP
-    - **Depends‑on:** [T013]
-
-- [ ] **T020 · Feature · P3: implement remote log collector for centralized analytics**
-    - **Context:** PLAN.md §8 Roadmap After MVP
-    - **Depends‑on:** [T013]
-
-- [ ] **T021 · Feature · P3: add PR-level mode for GitHub Actions**
-    - **Context:** PLAN.md §8 Roadmap After MVP
-    - **Depends‑on:** [T013]
-
-- [ ] **T022 · Feature · P3: use function-calling for structured JSON verdicts**
-    - **Context:** PLAN.md §8 Roadmap After MVP
-    - **Depends‑on:** [T013]
