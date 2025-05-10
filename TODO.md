@@ -142,7 +142,7 @@
         1. Pre-commit hook is triggered when attempting to commit.
     - **Depends‑on:** [T011]
 
-- [ ] **T013 · Test · P1: first run test with real commit**
+- [x] **T013 · Test · P1: first run test with real commit**
     - **Context:** PLAN.md §5.6 First run
     - **Action:**
         1. Stage all files with `git add .`.
