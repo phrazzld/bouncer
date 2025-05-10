@@ -130,7 +130,7 @@
     - **Depends‑on:** [T010]
 
 ## Git Hook Integration
-- [ ] **T012 · Feature · P0: install and configure Husky pre-commit hook**
+- [x] **T012 · Feature · P0: install and configure Husky pre-commit hook**
     - **Context:** PLAN.md §5.5 Install pre-commit hook
     - **Action:**
         1. Run `npx husky install` to set up Husky.
