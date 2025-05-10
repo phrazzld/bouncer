@@ -14,34 +14,64 @@ if (!process.env.GEMINI_API_KEY) {
 
 const AI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Constants for token estimation and handling large diffs
-const AVERAGE_CHARS_PER_TOKEN = 3.5;
+// Constants for token limits
 const TOKEN_LIMIT_THRESHOLD = 800000; // Conservative limit leaving buffer for prompt and rules
+const FALLBACK_AVERAGE_CHARS_PER_TOKEN = 3.5; // Fallback for estimation if token counting fails
+
+// Function to get accurate token count using Gemini API
+async function getTokenCount(text) {
+  try {
+    const countTokensResponse = await AI.models.countTokens({
+      model: "gemini-2.5-flash-preview-04-17",
+      contents: text,
+    });
+    return countTokensResponse.totalTokens;
+  } catch (error) {
+    // If token counting fails, fall back to estimation
+    console.warn("Warning: Token counting API failed, falling back to estimation");
+    return Math.ceil(text.length / FALLBACK_AVERAGE_CHARS_PER_TOKEN);
+  }
+}
 
 // Function to handle potentially large diffs by truncating if necessary
-function handlePotentiallyLargeDiff(diff) {
-  // Rough estimation of tokens based on character count
-  const estimatedTokens = Math.ceil(diff.length / AVERAGE_CHARS_PER_TOKEN);
-  
+async function handlePotentiallyLargeDiff(diff) {
+  // Get accurate token count
+  const tokenCount = await getTokenCount(diff);
+
   // If diff is within token limits, use it as is
-  if (estimatedTokens <= TOKEN_LIMIT_THRESHOLD) {
-    return diff;
+  if (tokenCount <= TOKEN_LIMIT_THRESHOLD) {
+    return {
+      diff,
+      tokenCount,
+      truncated: false
+    };
   }
-  
-  // Calculate how many characters to keep (with some safety margin)
-  const safeCharLimit = Math.floor(TOKEN_LIMIT_THRESHOLD * AVERAGE_CHARS_PER_TOKEN * 0.95);
-  
+
+  // Calculate how many characters to keep based on tokens per character ratio
+  const charRatio = diff.length / tokenCount;
+  const safeCharLimit = Math.floor(TOKEN_LIMIT_THRESHOLD * charRatio * 0.95);
+
   // Truncate the diff with a warning marker
   const truncatedDiff = diff.substring(0, safeCharLimit);
-  return truncatedDiff + 
-    "\n\n[TRUNCATED: Diff exceeds recommended limit of 800,000 tokens. " +
-    `Showing first ${safeCharLimit} characters (approximately ${Math.floor(TOKEN_LIMIT_THRESHOLD * 0.95)} tokens). ` +
-    "The complete diff was " + diff.length + " characters in total.]";
+
+  // Get token count of the truncated diff to verify we're under the limit
+  const truncatedTokenCount = await getTokenCount(truncatedDiff);
+
+  return {
+    diff: truncatedDiff +
+      "\n\n[TRUNCATED: Diff exceeds recommended limit of 800,000 tokens. " +
+      `Showing first ${truncatedTokenCount} tokens of original ${tokenCount} tokens total. ` +
+      `(Characters: ${truncatedDiff.length} of ${diff.length})]`,
+    tokenCount: truncatedTokenCount,
+    originalTokenCount: tokenCount,
+    truncated: true
+  };
 }
 
 // Retrieve the staged diff and handle potential truncation
 const rawDiff = execSync("git diff --cached --unified=0", { encoding: "utf8" });
-const diff = handlePotentiallyLargeDiff(rawDiff);
+// Note: This returns a promise now that needs to be awaited
+const diffInfo = await handlePotentiallyLargeDiff(rawDiff);
 
 // Retrieve the current commit hash
 let commit;
@@ -71,7 +101,7 @@ ${rules}
 
 USER:
 Commit ${commit} diff:
-${diff}
+${diffInfo.diff}
 Return exactly:
 PASS – if all rules satisfied
 or
@@ -86,6 +116,65 @@ try {
     contents: prompt,
     config: { temperature: 0.1, candidateCount: 1 }
   });
+
+  // Extract usage metadata if available
+  const usageMetadata = res.usageMetadata;
+
+  // Parse the response to determine the verdict (PASS or FAIL)
+  const verdict = /PASS/i.test(res.text) ? "PASS" : "FAIL";
+
+  // Prepare token usage information for logging
+  const tokenUsage = {
+    inputTokens: usageMetadata?.promptTokenCount || diffInfo.tokenCount || null,
+    outputTokens: usageMetadata?.candidatesTokenCount || null,
+    totalTokens: usageMetadata?.totalTokenCount || null,
+    diffTokens: diffInfo.tokenCount,
+    truncated: diffInfo.truncated || false
+  };
+
+  if (diffInfo.truncated) {
+    tokenUsage.originalDiffTokens = diffInfo.originalTokenCount;
+  }
+
+  // Log the verdict, response, and usage metadata to .bouncer.log.jsonl
+  await fs.appendFile(
+    ".bouncer.log.jsonl",
+    JSON.stringify({
+      ts: new Date().toISOString(),
+      commit,
+      verdict,
+      reason: res.text,
+      usage: tokenUsage
+    }) + "\n"
+  );
+
+  // Display appropriate console output based on verdict and exit accordingly
+  if (verdict === "FAIL") {
+    console.error("\n🛑 Bouncer blocked this commit:\n" + res.text);
+
+    // Display token usage information
+    if (tokenUsage.totalTokens) {
+      console.info(`\nToken usage: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output (${tokenUsage.totalTokens} total)`);
+    }
+    if (diffInfo.truncated) {
+      console.info(`Diff truncated: ${diffInfo.tokenCount} of ${diffInfo.originalTokenCount} tokens included`);
+    }
+
+    process.exit(1); // Exit with error code for FAIL
+  } else {
+    console.log("✅ Bouncer PASS");
+
+    // Display token usage information
+    if (tokenUsage.totalTokens) {
+      console.info(`\nToken usage: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output (${tokenUsage.totalTokens} total)`);
+    }
+    if (diffInfo.truncated) {
+      console.info(`Diff truncated: ${diffInfo.tokenCount} of ${diffInfo.originalTokenCount} tokens included`);
+    }
+
+    // PASS verdict will exit with code 0 by default
+  }
+
 } catch (error) {
   // Handle different error types
   console.error("\n❌ Error calling Gemini API:");
@@ -113,40 +202,22 @@ try {
     console.error(`Unexpected error: ${error.message || error}`);
   }
 
-  // Log the error to the audit trail
+  // Log the error to the audit trail with token count information
   await fs.appendFile(
     ".bouncer.log.jsonl",
     JSON.stringify({
       ts: new Date().toISOString(),
       commit,
       verdict: "ERROR",
-      reason: `API Error: ${error.message || 'Unknown error'}`
+      reason: `API Error: ${error.message || 'Unknown error'}`,
+      usage: {
+        diffTokens: diffInfo.tokenCount,
+        truncated: diffInfo.truncated || false,
+        ...(diffInfo.truncated && { originalDiffTokens: diffInfo.originalTokenCount })
+      }
     }) + "\n"
   );
 
   // Exit with error code
   process.exit(1);
-}
-
-// Parse the response to determine the verdict (PASS or FAIL)
-const verdict = /PASS/i.test(res.text) ? "PASS" : "FAIL";
-
-// Log the verdict and response to .bouncer.log.jsonl
-await fs.appendFile(
-  ".bouncer.log.jsonl",
-  JSON.stringify({
-    ts: new Date().toISOString(),
-    commit,
-    verdict,
-    reason: res.text
-  }) + "\n"
-);
-
-// Display appropriate console output based on verdict and exit accordingly
-if (verdict === "FAIL") {
-  console.error("\n🛑 Bouncer blocked this commit:\n" + res.text);
-  process.exit(1); // Exit with error code for FAIL
-} else {
-  console.log("✅ Bouncer PASS");
-  // PASS verdict will exit with code 0 by default
 }

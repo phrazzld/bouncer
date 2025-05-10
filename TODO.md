@@ -178,7 +178,7 @@
         1. Test with invalid/missing API key and check error handling.
     - **Depends‑on:** [T010]
 
-- [ ] **T016 · Feature · P2: implement token counting and quota tracking**
+- [x] **T016 · Feature · P2: implement token counting and quota tracking**
     - **Context:** PLAN.md §7 Edge-Cases & Hardening
     - **Action:**
         1. Add logic to count tokens precisely using Gemini's countTokens API endpoint.
