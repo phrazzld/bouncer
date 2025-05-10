@@ -1,0 +1,4 @@
+{"ts":"2025-05-09T10:00:00Z","commit":"test123","verdict":"PASS","reason":"PASS - Test successful"}
+{"ts":"2025-05-10T03:15:12.995Z","commit":"aa8e1d80c4c435c9f4ceb7b33b972db0b1675823","verdict":"FAIL","reason":"FAIL – Cannot review diff. No diff content provided for commit aa8e1d80c4c435c9f4ceb7b33b972db0b1675823. Please provide the diff content."}
+{"ts":"2025-05-10T08:21:32.732Z","commit":"b8246b6786d6ee91724f1e12da8258cd932757e4","verdict":"PASS","reason":"PASS – The diff adds husky configuration and a plan, adhering to all bouncer rules. No secrets, foot-guns, or excessive changes found."}
+{"ts":"2025-05-10T08:27:03.455Z","commit":"b917a3596245342c6934224b6e1f5f721f1d3938","verdict":"PASS","reason":"PASS – The diff is a simple change to a markdown file, marking a task as complete. It contains no code, secrets, or large changes, satisfying all Bouncer rules."}
