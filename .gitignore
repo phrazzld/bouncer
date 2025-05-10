@@ -1,3 +1,23 @@
-**/.claude/settings.local.json
+# Dependencies
 node_modules/
+package-lock.json
+
+# Environment and secrets
 .env
+**/.claude/settings.local.json
+
+# Logs
+.bouncer.log.jsonl
+logs/
+*.log
+npm-debug.log*
+
+# Testing
+large-test-file.txt
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
