@@ -1,218 +1,203 @@
-# Bouncer – Task Breakdown
+# Todo
 
-## Project Bootstrap
-- [x] **T001 · Chore · P0: initialize project with pnpm**
-    - **Context:** PLAN.md §5.1 Bootstrap
+## `bouncer.js` CLI Arguments & Configuration
+- [x] **T001 · Feature · P1: implement cli argument parsing foundation**
+    - **Context:** Implementation Steps 1.1
     - **Action:**
-        1. Run `pnpm init` in the current directory.
+        1. Integrate a minimal CLI argument parser (e.g., `minimist`) into `bouncer.js` to process `process.argv`.
     - **Done‑when:**
-        1. A valid `package.json` exists in the project root.
-    - **Verification:**
-        1. `ls` command shows `package.json` in the root directory.
+        1. `bouncer.js` can parse command-line arguments into an accessible object.
+        2. Foundation for specific argument handling (e.g., `--rules-file`) is established.
     - **Depends‑on:** none
 
-- [x] **T002 · Chore · P0: install core dependencies**
-    - **Context:** PLAN.md §5.1 Bootstrap
+- [ ] **T002 · Feature · P1: add `--rules-file` cli argument support**
+    - **Context:** Implementation Steps 1.2, 1.5
     - **Action:**
-        1. Run `pnpm add @google/genai dotenv`.
+        1. Modify `bouncer.js` to accept a `--rules-file <path>` CLI argument.
+        2. Implement a default value of `./rules.md` if the argument is not provided.
+        3. Ensure the specified or default path is resolved relative to the current working directory.
     - **Done‑when:**
-        1. `@google/genai` and `dotenv` are listed as dependencies in `package.json`.
-        2. `node_modules` directory contains these packages.
+        1. `bouncer.js` reads the rules from the path specified by `--rules-file` or the default.
+        2. Path resolution relative to CWD is confirmed.
     - **Verification:**
-        1. `pnpm list @google/genai dotenv` shows both installed.
+        1. Run `bouncer.js` with a custom `--rules-file` path and verify it attempts to read that file.
+        2. Run `bouncer.js` without `--rules-file` and verify it attempts to read `./rules.md`.
     - **Depends‑on:** [T001]
 
-- [x] **T003 · Chore · P0: create placeholder files**
-    - **Context:** PLAN.md §4 Directory Layout
+- [ ] **T003 · Feature · P1: add `--env-file` cli argument support**
+    - **Context:** Implementation Steps 1.3, 1.5
     - **Action:**
-        1. Create files: `bouncer.js`, `rules.md`, `.bouncer.log.jsonl`, `.env`.
+        1. Modify `bouncer.js` to accept an `--env-file <path>` CLI argument.
+        2. Implement a default value of `./.env` if the argument is not provided.
+        3. Ensure `dotenv` loads environment variables from the specified or default path, resolved relative to CWD.
     - **Done‑when:**
-        1. All required files exist in the project root.
+        1. `bouncer.js` loads environment variables from the path specified by `--env-file` or the default.
+        2. Path resolution relative to CWD is confirmed for the `.env` file.
     - **Verification:**
-        1. `ls -la` shows all specified files.
+        1. Create a custom `.env` file at a non-default path, run `bouncer.js` with `--env-file` pointing to it, and verify `GEMINI_API_KEY` is loaded.
     - **Depends‑on:** [T001]
 
-## Environment Configuration
-- [x] **T004 · Chore · P0: configure `.env` for API key and add to `.gitignore`**
-    - **Context:** PLAN.md §2 Auth, §4 Directory Layout
+- [ ] **T004 · Feature · P1: implement `--log-file` argument and ensure structured audit logging**
+    - **Context:** Implementation Steps 1.4, 1.5; Architecture Blueprint (`.bouncer.log.jsonl`)
     - **Action:**
-        1. Add the line `GEMINI_API_KEY=""` to `.env`.
-        2. Ensure `.gitignore` includes the line `.env` to prevent tracking.
+        1. Modify `bouncer.js` to accept a `--log-file <path>` CLI argument, defaulting to `./.bouncer.log.jsonl`.
+        2. Ensure the specified or default path is resolved relative to CWD.
+        3. Ensure `bouncer.js` writes all audit logs (actions, verdicts, errors) in a structured JSONL format to this path.
     - **Done‑when:**
-        1. `.env` contains the `GEMINI_API_KEY` placeholder.
-        2. `.gitignore` exists and lists `.env` to prevent tracking.
+        1. `bouncer.js` writes logs to the path specified by `--log-file` or the default.
+        2. All Bouncer actions, verdicts (pass/fail), and errors are logged in structured JSONL format.
     - **Verification:**
-        1. `cat .env` shows the placeholder.
-        2. `git status` (after staging `.gitignore`) shows `.env` as untracked or ignored.
-    - **Depends‑on:** [T003]
+        1. Run `bouncer.js` (simulating a commit) and verify the log file is created at the correct path with structured JSONL entries.
+        2. Test with a custom `--log-file` path.
+    - **Depends‑on:** [T001]
 
-## Rule Definition
-- [x] **T005 · Feature · P0: populate `rules.md` with template rules**
-    - **Context:** PLAN.md §3 Rule-Set, §5.2 Write rules.md
+## `bouncer.js` Error Handling
+- [ ] **T005 · Feature · P1: implement error handling for missing/invalid `GEMINI_API_KEY`**
+    - **Context:** Error & Edge-Case Strategy; Implementation Steps 3
     - **Action:**
-        1. Edit `rules.md` to include the five example rules listed in PLAN.md.
+        1. In `bouncer.js`, after attempting to load the `.env` file, check if `process.env.GEMINI_API_KEY` is missing or invalid (e.g., empty).
+        2. If so, print a clear, user-friendly error message to the console and exit with a non-zero status code.
+        3. Log the error to the configured log file.
     - **Done‑when:**
-        1. `rules.md` contains the specified template rules.
+        1. `bouncer.js` exits with a non-zero code and user-friendly message if API key is missing/invalid.
+        2. Error is logged to the specified log file.
     - **Verification:**
-        1. View `rules.md`; content matches PLAN.md example.
-    - **Depends‑on:** [T003]
+        1. Run `bouncer.js` without `GEMINI_API_KEY` set (or set to empty) and verify console output, exit code, and log entry.
+    - **Depends‑on:** [T001, T003, T004]
 
-## Main Script (`bouncer.js`) - Core Logic
-- [x] **T006 · Feature · P0: implement script boilerplate and AI client initialization**
-    - **Context:** PLAN.md §5.3 bouncer.js skeleton
+- [ ] **T006 · Feature · P1: implement error handling for missing/unreadable `rules.md` file**
+    - **Context:** Error & Edge-Case Strategy; Implementation Steps 3
     - **Action:**
-        1. Add `#!/usr/bin/env node` shebang to the top of `bouncer.js`.
-        2. Add required import statements (`fs`, `child_process`, `@google/genai`, `dotenv/config`).
-        3. Initialize the `GoogleGenAI` client using `process.env.GEMINI_API_KEY`.
+        1. In `bouncer.js`, when attempting to read the `rules.md` file, handle file not found or unreadable errors.
+        2. If an error occurs, print a clear, user-friendly error message to the console and exit with a non-zero status code.
+        3. Log the error to the configured log file.
     - **Done‑when:**
-        1. `bouncer.js` has the shebang and necessary imports.
-        2. `GoogleGenAI` client is initialized, ready to use the API key from `.env`.
+        1. `bouncer.js` exits with a non-zero code and user-friendly message if the rules file is missing or unreadable.
+        2. Error is logged to the specified log file.
     - **Verification:**
-        1. Basic script structure is in place.
-    - **Depends‑on:** [T002, T003, T004]
+        1. Run `bouncer.js` with the `--rules-file` pointing to a non-existent or unreadable file and verify console output, exit code, and log entry.
+    - **Depends‑on:** [T001, T002, T004]
 
-- [x] **T007 · Feature · P0: implement git diff and commit hash retrieval**
-    - **Context:** PLAN.md §5.3 bouncer.js skeleton
+- [ ] **T007 · Feature · P1: implement error handling for gemini api communication errors**
+    - **Context:** Error & Edge-Case Strategy; Implementation Steps 3
     - **Action:**
-        1. Add code to execute `git diff --cached --unified=0` and capture the output.
-        2. Add code to execute `git rev-parse --verify HEAD` and capture the commit hash.
-        3. Handle the case of a new repository with no commits (use placeholder like "<new>").
+        1. In `bouncer.js`, wrap calls to the `@google/genai` API in try-catch blocks to handle network issues, authentication failures, quota limits, etc.
+        2. If an API error occurs, print a user-friendly summary to the console and exit with a non-zero status code.
+        3. Log the detailed error from `@google/genai` to the configured log file.
     - **Done‑when:**
-        1. Git diff and commit hash retrieval code is implemented.
+        1. `bouncer.js` exits with a non-zero code and user-friendly summary if Gemini API calls fail.
+        2. Detailed API error is logged to the specified log file.
     - **Verification:**
-        1. Code correctly retrieves diff and commit hash in a git repository.
-    - **Depends‑on:** [T006]
+        1. Mock the `@google/genai` client to throw various errors and verify console output, exit code, and log entries.
+    - **Depends‑on:** [T001, T004]
 
-- [x] **T008 · Feature · P0: implement rules loading and prompt construction**
-    - **Context:** PLAN.md §5.3 bouncer.js skeleton, §3 Rule-Set
+- [ ] **T008 · Feature · P2: implement error handling for `git diff --cached` command failures**
+    - **Context:** Risk Assessment (`git diff` command fails or behaves unexpectedly); Implementation Steps 3
     - **Action:**
-        1. Add code to read the rules from `rules.md`.
-        2. Construct the prompt string per PLAN.md format, incorporating rules, commit hash, and diff.
+        1. In `bouncer.js`, when executing `git diff --cached`, catch any errors from the child process execution.
+        2. If an error occurs, print a clear error message to the console (e.g., "Not a git repository or no staged files") and exit with a non-zero status code.
+        3. Log the error to the configured log file.
     - **Done‑when:**
-        1. Code that reads rules and constructs the prompt is implemented.
+        1. `bouncer.js` exits with a non-zero code and user-friendly message if `git diff --cached` fails.
+        2. Error is logged to the specified log file.
     - **Verification:**
-        1. Generated prompt follows the format specified in PLAN.md.
-    - **Depends‑on:** [T005, T007]
+        1. Attempt to run `bouncer.js` in a directory that is not a Git repository, or with no staged files, and verify console output, exit code, and log entry.
+    - **Depends‑on:** [T001, T004]
 
-- [x] **T009 · Feature · P0: implement Gemini API call and response handling**
-    - **Context:** PLAN.md §5.3 bouncer.js skeleton, §2 Gemini API
+## `pre-commit` Framework Integration
+- [ ] **T009 · Feature · P1: create and configure `.pre-commit-hooks.yaml` file**
+    - **Context:** Implementation Steps 2; Public Interfaces / Contracts
     - **Action:**
-        1. Call the Gemini API with the constructed prompt.
-        2. Parse the response text to determine PASS/FAIL verdict.
+        1. Create a new file named `.pre-commit-hooks.yaml` in the root of the Bouncer repository.
+        2. Define the `bouncer-check` hook as specified in the "Public Interfaces / Contracts" section of the plan, including `id`, `name`, `description`, `entry`, `language`, `language_version`, `additional_dependencies`, and `pass_filenames: false`.
     - **Done‑when:**
-        1. Code that calls the API and determines the verdict is implemented.
+        1. `.pre-commit-hooks.yaml` file exists and is correctly formatted.
+        2. The hook definition matches the plan specifications.
     - **Verification:**
-        1. API call correctly returns a response with a PASS or FAIL determination.
-    - **Depends‑on:** [T008]
+        1. In a test consuming repository, add the Bouncer hook using the local path to `.pre-commit-hooks.yaml` and run `pre-commit install`.
+        2. Trigger the hook and verify `bouncer.js` is executed.
+    - **Depends‑on:** none
 
-- [x] **T010 · Feature · P0: implement logging and verdict handling**
-    - **Context:** PLAN.md §5.3 bouncer.js skeleton, §6 Logging Format
+## Testing
+- [ ] **T010 · Test · P1: add unit tests for CLI argument parsing and path handling**
+    - **Context:** Testing Strategy: Unit Tests, Implementation Steps 1
     - **Action:**
-        1. Add code to log verdict and rationale to `.bouncer.log.jsonl` in the specified format.
-        2. Implement conditional exit based on verdict (exit 1 for FAIL, exit 0 for PASS).
-        3. Add appropriate console output to inform the user of the verdict.
+        1. Add tests to cover all argument combinations and default handling.
+        2. Mock filesystem and environment loading for path tests.
     - **Done‑when:**
-        1. Log entry is written to `.bouncer.log.jsonl` with all required fields.
-        2. Script exits with proper code and user feedback on console.
+        1. All argument permutations and path logic are tested.
+        2. >90% coverage on CLI parsing code.
     - **Verification:**
-        1. Log file contains entries in correct JSON format.
-        2. Console output is informative and script exits with appropriate code.
+        1. Run test suite, confirm coverage and all tests pass.
+    - **Depends‑on:** [T001, T002, T003, T004]
+
+- [ ] **T011 · Test · P1: add unit tests for error handling and exit codes**
+    - **Context:** Testing Strategy: Unit Tests, Implementation Steps 3
+    - **Action:**
+        1. Add tests that simulate missing/invalid API key, missing/unreadable rules file, Gemini API errors.
+        2. Assert proper error messages, log output, and exit codes.
+    - **Done‑when:**
+        1. All key error cases are tested and verified.
+        2. No unhandled exceptions in error flows.
+    - **Verification:**
+        1. Run test suite and simulate failures; verify output and logs.
+    - **Depends‑on:** [T005, T006, T007, T008]
+
+- [ ] **T012 · Test · P0: implement integration tests for pre-commit hook in a temp git repo**
+    - **Context:** Testing Strategy: Integration Tests
+    - **Action:**
+        1. Set up temp repo, install pre-commit, configure Bouncer hook.
+        2. Test commits with passing/failing diffs, missing API key, missing rules, and custom path args.
+        3. Verify hook runs, outputs, exit codes, and log file.
+    - **Done‑when:**
+        1. All scenarios pass/fail as expected.
+        2. Integration test suite can run in CI.
+    - **Verification:**
+        1. Run tests and manually inspect output/logs if needed.
+    - **Depends‑on:** [T001, T002, T003, T004, T005, T006, T007, T008, T009]
+
+## Documentation (`README.md`)
+- [ ] **T013 · Feature · P0: update README.md with pre-commit installation and configuration instructions**
+    - **Context:** Implementation Steps 4.1-4.2
+    - **Action:**
+        1. Add installation steps for `pre-commit` and Bouncer hook configuration.
+        2. Document `.pre-commit-config.yaml` example, running `pre-commit install`, and optional custom args.
+        3. Explain creation of `.env` file for `GEMINI_API_KEY` and usage of `rules.md`.
+        4. Provide examples for customizing paths using `args` in `.pre-commit-config.yaml`.
+    - **Done‑when:**
+        1. README.md contains clear, accurate installation and configuration instructions.
+    - **Verification:**
+        1. Follow instructions from scratch and confirm successful install in a test repo.
     - **Depends‑on:** [T009]
 
-- [x] **T011 · Chore · P0: make bouncer.js executable**
-    - **Context:** PLAN.md §5.4 Make executable
+- [ ] **T014 · Chore · P0: add explicit warning to add `.env` file to `.gitignore`**
+    - **Context:** Risk Assessment (User commits `.env` file with API key)
     - **Action:**
-        1. Run `chmod +x bouncer.js` to make the script executable.
+        1. Add a prominent and critical warning in the "Configuration" section of `README.md` instructing users to add their `.env` file (or custom-named env file) to their project's `.gitignore`.
     - **Done‑when:**
-        1. File has execute permissions.
+        1. A clear, hard-to-miss warning about adding the `.env` file to `.gitignore` is present in `README.md`.
     - **Verification:**
-        1. Can run `./bouncer.js` from the command line.
-    - **Depends‑on:** [T010]
-
-## Git Hook Integration
-- [x] **T012 · Feature · P0: install and configure Husky pre-commit hook**
-    - **Context:** PLAN.md §5.5 Install pre-commit hook
-    - **Action:**
-        1. Run `npx husky install` to set up Husky.
-        2. Add `.husky/pre-commit` hook to execute `node ./bouncer.js`.
-        3. Add and commit the hook to version control.
-    - **Done‑when:**
-        1. Husky is installed, `.husky/pre-commit` runs `bouncer.js` on every commit.
-    - **Verification:**
-        1. Pre-commit hook is triggered when attempting to commit.
-    - **Depends‑on:** [T011]
-
-- [x] **T013 · Test · P1: first run test with real commit**
-    - **Context:** PLAN.md §5.6 First run
-    - **Action:**
-        1. Stage all files with `git add .`.
-        2. Attempt to commit with `git commit -m "test"`.
-    - **Done‑when:**
-        1. Pre-commit hook executes `bouncer.js`.
-        2. Commit is either allowed or blocked based on the verdict.
-    - **Verification:**
-        1. Complete end-to-end flow works as expected.
-    - **Depends‑on:** [T012]
-
-## Edge Cases & Hardening
-- [x] **T014 · Feature · P1: handle large diffs by truncating input**
-    - **Context:** PLAN.md §7 Edge-Cases & Hardening
-    - **Action:**
-        1. Add logic to detect large diffs (> 100k tokens).
-        2. Implement truncation with context markers or chunking for large diffs.
-    - **Done‑when:**
-        1. Script handles large diffs without exceeding token limits.
-    - **Verification:**
-        1. Test with a very large diff and confirm truncation/handling.
-    - **Depends‑on:** [T010]
-
-- [x] **T015 · Feature · P1: handle API outage or missing key gracefully**
-    - **Context:** PLAN.md §7 Edge-Cases & Hardening
-    - **Action:**
-        1. Add error handling around API calls.
-        2. Detect missing API key and provide user-friendly error message.
-        3. Implement configurable behavior for API failures (hard-fail or warn).
-    - **Done‑when:**
-        1. Script handles API errors gracefully with helpful messages.
-    - **Verification:**
-        1. Test with invalid/missing API key and check error handling.
-    - **Depends‑on:** [T010]
-
-- [x] **T016 · Feature · P2: implement token counting and quota tracking**
-    - **Context:** PLAN.md §7 Edge-Cases & Hardening
-    - **Action:**
-        1. Add logic to count tokens precisely using Gemini's countTokens API endpoint.
-        2. Replace the current character-based token estimation with exact token counts.
-        3. Track and log API quota usage using response headers and usageMetadata from the API.
-    - **Implementation Details:**
-        ```javascript
-        // Use the countTokens endpoint for accurate token counting
-        const countTokensResponse = await ai.models.countTokens({
-          model: "gemini-2.5-flash-preview-04-17",
-          contents: prompt,
-        });
-        const tokenCount = countTokensResponse.totalTokens;
-
-        // Retrieve usage metadata from generation response
-        const usageMetadata = generateResponse.usageMetadata;
-        ```
-    - **Done‑when:**
-        1. Script uses accurate token counting instead of character-based estimation.
-        2. Script logs token usage statistics in the audit trail.
-    - **Verification:**
-        1. Log file includes precise token usage information.
-        2. Large diffs are handled based on exact token counts rather than estimates.
-    - **Depends‑on:** [T010]
-
-## Documentation
-- [x] **T017 · Chore · P1: create README.md with setup and usage instructions**
-    - **Context:** PLAN.md §Documentation Approach
-    - **Action:**
-        1. Create `README.md` with project description, setup steps, usage examples.
-        2. Include troubleshooting section based on PLAN.md §9.
-    - **Done‑when:**
-        1. README.md exists with comprehensive documentation.
-    - **Verification:**
-        1. Review content for completeness and accuracy.
+        1. Review README.md for placement and clarity.
     - **Depends‑on:** [T013]
 
+- [ ] **T015 · Chore · P1: add updating and troubleshooting sections to README.md**
+    - **Context:** Implementation Steps 4.3-4.4
+    - **Action:**
+        1. Add update/upgrade instructions for Bouncer versioning, explaining how to change the `rev:` value in `.pre-commit-config.yaml`.
+        2. Create a "Troubleshooting" section with common issues and solutions: API key errors, rules file errors, etc.
+    - **Done‑when:**
+        1. Both sections are present, accurate, and cover intended topics.
+    - **Verification:**
+        1. Review and confirm completeness of documentation.
+    - **Depends‑on:** [T013]
+
+## Version Tagging and Release
+- [ ] **T016 · Chore · P1: create git tag for new release upon completion**
+    - **Context:** Final Deliverables
+    - **Action:**
+        1. Tag release commit with semantic version (e.g., v1.0.0) after all work is merged.
+    - **Done‑when:**
+        1. Tag appears in repository.
+    - **Verification:**
+        1. Check tag on GitHub/Git and confirm users can reference it in `.pre-commit-config.yaml`.
+    - **Depends‑on:** [T001, T002, T003, T004, T005, T006, T007, T008, T009, T010, T011, T012, T013, T014, T015]

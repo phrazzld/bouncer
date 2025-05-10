@@ -4,6 +4,39 @@ import { execSync } from "node:child_process";
 import { GoogleGenAI } from "@google/genai";
 import "dotenv/config";
 
+/**
+ * Parse command line arguments from process.argv
+ * Supports both flag arguments (--flag) and key-value pairs (--key value)
+ * @returns {Object} Object containing parsed arguments
+ */
+function parseArguments() {
+  const args = {};
+  const argv = process.argv.slice(2); // Remove 'node' and script name
+
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+
+    // Check if argument is a flag/key (starts with --)
+    if (arg.startsWith('--')) {
+      const key = arg.slice(2); // Remove the leading --
+
+      // Check if next item exists and is not another flag
+      if (i + 1 < argv.length && !argv[i + 1].startsWith('--')) {
+        args[key] = argv[i + 1];
+        i++; // Skip the value in the next iteration
+      } else {
+        // It's a flag without a value
+        args[key] = true;
+      }
+    }
+  }
+
+  return args;
+}
+
+// Parse command line arguments
+const cliArgs = parseArguments();
+
 // Check if API key exists and validate
 if (!process.env.GEMINI_API_KEY) {
   console.error("\n🔑 Error: Missing Gemini API key");
