@@ -155,7 +155,7 @@
     - **Depends‑on:** [T012]
 
 ## Edge Cases & Hardening
-- [ ] **T014 · Feature · P1: handle large diffs by truncating input**
+- [x] **T014 · Feature · P1: handle large diffs by truncating input**
     - **Context:** PLAN.md §7 Edge-Cases & Hardening
     - **Action:**
         1. Add logic to detect large diffs (> 100k tokens).
@@ -166,7 +166,7 @@
         1. Test with a very large diff and confirm truncation/handling.
     - **Depends‑on:** [T010]
 
-- [ ] **T015 · Feature · P1: handle API outage or missing key gracefully**
+- [x] **T015 · Feature · P1: handle API outage or missing key gracefully**
     - **Context:** PLAN.md §7 Edge-Cases & Hardening
     - **Action:**
         1. Add error handling around API calls.
@@ -181,12 +181,27 @@
 - [ ] **T016 · Feature · P2: implement token counting and quota tracking**
     - **Context:** PLAN.md §7 Edge-Cases & Hardening
     - **Action:**
-        1. Add logic to count tokens locally via the appropriate endpoint.
-        2. Track and log API quota usage using response headers.
+        1. Add logic to count tokens precisely using Gemini's countTokens API endpoint.
+        2. Replace the current character-based token estimation with exact token counts.
+        3. Track and log API quota usage using response headers and usageMetadata from the API.
+    - **Implementation Details:**
+        ```javascript
+        // Use the countTokens endpoint for accurate token counting
+        const countTokensResponse = await ai.models.countTokens({
+          model: "gemini-2.5-flash-preview-04-17",
+          contents: prompt,
+        });
+        const tokenCount = countTokensResponse.totalTokens;
+
+        // Retrieve usage metadata from generation response
+        const usageMetadata = generateResponse.usageMetadata;
+        ```
     - **Done‑when:**
-        1. Script logs token usage statistics.
+        1. Script uses accurate token counting instead of character-based estimation.
+        2. Script logs token usage statistics in the audit trail.
     - **Verification:**
-        1. Log file or console output includes token usage information.
+        1. Log file includes precise token usage information.
+        2. Large diffs are handled based on exact token counts rather than estimates.
     - **Depends‑on:** [T010]
 
 ## Documentation
