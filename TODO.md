@@ -119,7 +119,7 @@
         2. Console output is informative and script exits with appropriate code.
     - **Depends‑on:** [T009]
 
-- [ ] **T011 · Chore · P0: make bouncer.js executable**
+- [x] **T011 · Chore · P0: make bouncer.js executable**
     - **Context:** PLAN.md §5.4 Make executable
     - **Action:**
         1. Run `chmod +x bouncer.js` to make the script executable.
