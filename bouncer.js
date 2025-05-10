@@ -46,10 +46,22 @@ const res = await AI.models.generateContent({
 // Parse the response to determine the verdict (PASS or FAIL)
 const verdict = /PASS/i.test(res.text) ? "PASS" : "FAIL";
 
-// For verification/testing only - will be expanded in T010 with proper logging and exit code
-console.log(`Verdict: ${verdict}`);
-console.log(`Response: ${res.text.slice(0, 100)}${res.text.length > 100 ? '...' : ''}`);
+// Log the verdict and response to .bouncer.log.jsonl
+await fs.appendFile(
+  ".bouncer.log.jsonl",
+  JSON.stringify({
+    ts: new Date().toISOString(),
+    commit,
+    verdict,
+    reason: res.text
+  }) + "\n"
+);
 
-// Now we have the verdict and response, the next step will be to:
-// 1. Log the results (T010)
-// 2. Exit with appropriate code based on verdict (T010)
+// Display appropriate console output based on verdict and exit accordingly
+if (verdict === "FAIL") {
+  console.error("\n🛑 Bouncer blocked this commit:\n" + res.text);
+  process.exit(1); // Exit with error code for FAIL
+} else {
+  console.log("✅ Bouncer PASS");
+  // PASS verdict will exit with code 0 by default
+}

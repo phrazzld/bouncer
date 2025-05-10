@@ -105,7 +105,7 @@
         1. API call correctly returns a response with a PASS or FAIL determination.
     - **Depends‑on:** [T008]
 
-- [ ] **T010 · Feature · P0: implement logging and verdict handling**
+- [x] **T010 · Feature · P0: implement logging and verdict handling**
     - **Context:** PLAN.md §5.3 bouncer.js skeleton, §6 Logging Format
     - **Action:**
         1. Add code to log verdict and rationale to `.bouncer.log.jsonl` in the specified format.
