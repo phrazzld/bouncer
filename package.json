@@ -5,7 +5,8 @@
   "main": "bouncer.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +15,8 @@
   "dependencies": {
     "@google/genai": "^0.13.0",
     "dotenv": "^16.5.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
