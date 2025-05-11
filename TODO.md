@@ -10,7 +10,7 @@
         2. Foundation for specific argument handling (e.g., `--rules-file`) is established.
     - **Depends‑on:** none
 
-- [ ] **T002 · Feature · P1: add `--rules-file` cli argument support**
+- [x] **T002 · Feature · P1: add `--rules-file` cli argument support**
     - **Context:** Implementation Steps 1.2, 1.5
     - **Action:**
         1. Modify `bouncer.js` to accept a `--rules-file <path>` CLI argument.

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
+import path from "node:path";
 import { execSync } from "node:child_process";
 import { GoogleGenAI } from "@google/genai";
 import "dotenv/config";
@@ -115,14 +116,19 @@ try {
   commit = "<new>";
 }
 
-// Read rules from rules.md
+// Determine rules file path (use CLI arg or default)
+const rulesFilePath = cliArgs["rules-file"]
+  ? path.resolve(cliArgs["rules-file"])
+  : path.resolve("./rules.md");
+
+// Read rules from the specified file
 let rules;
 try {
-  rules = await fs.readFile(new URL("./rules.md", import.meta.url), "utf8");
+  rules = await fs.readFile(rulesFilePath, "utf8");
 } catch (error) {
-  console.error("\n📄 Error: Could not read rules.md file");
+  console.error(`\n📄 Error: Could not read rules file at ${rulesFilePath}`);
   console.error(`${error.message}`);
-  console.error("Please ensure rules.md exists in the same directory as bouncer.js");
+  console.error("Please ensure the rules file exists and is readable");
   process.exit(1);
 }
 
