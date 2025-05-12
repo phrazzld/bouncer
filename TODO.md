@@ -65,7 +65,7 @@
         1. Run `bouncer.js` without `GEMINI_API_KEY` set (or set to empty) and verify console output, exit code, and log entry.
     - **Depends‑on:** [T001, T003, T004]
 
-- [ ] **T006 · Feature · P1: implement error handling for missing/unreadable `rules.md` file**
+- [x] **T006 · Feature · P1: implement error handling for missing/unreadable `rules.md` file**
     - **Context:** Error & Edge-Case Strategy; Implementation Steps 3
     - **Action:**
         1. In `bouncer.js`, when attempting to read the `rules.md` file, handle file not found or unreadable errors.

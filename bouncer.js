@@ -202,15 +202,56 @@ try {
   commit = "<new>";
 }
 
+/**
+ * Log rules file error and exit
+ * @param {string} errorMessage - The error message to log
+ * @param {Error} originalError - The original error object
+ * @param {string[]} consoleMessages - Additional messages to display on console
+ */
+async function handleRulesFileError(errorMessage, originalError, consoleMessages) {
+  console.error(`\n📄 Error: ${errorMessage}`);
+  console.error(`Source: ${rulesFilePath}`);
+  console.error(`Details: ${originalError.message}`);
+
+  // Display additional console messages if provided
+  if (consoleMessages && consoleMessages.length) {
+    consoleMessages.forEach(msg => console.error(msg));
+  }
+
+  // Log the error to the configured log file
+  try {
+    await fs.appendFile(
+      logFilePath,
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        commit: "<rules-file-error>",
+        verdict: "ERROR",
+        reason: `Rules File Error: ${errorMessage}`,
+        error: originalError.message,
+        source: rulesFilePath
+      }) + "\n"
+    );
+  } catch (logError) {
+    console.warn(`\n⚠️ Warning: Could not write to log file at ${logFilePath}`);
+    console.warn(`Error: ${logError.message}`);
+  }
+
+  process.exit(1);
+}
+
 // Read rules from the specified file
 let rules;
 try {
   rules = await fs.readFile(rulesFilePath, "utf8");
 } catch (error) {
-  console.error(`\n📄 Error: Could not read rules file at ${rulesFilePath}`);
-  console.error(`${error.message}`);
-  console.error("Please ensure the rules file exists and is readable");
-  process.exit(1);
+  await handleRulesFileError(
+    "Could not read rules file",
+    error,
+    [
+      "Please ensure the rules file exists and is readable.",
+      "The rules file defines the criteria Bouncer uses to evaluate commits."
+    ]
+  );
 }
 
 // Construct the prompt according to the format in PLAN.md
