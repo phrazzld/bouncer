@@ -105,7 +105,7 @@
     - **Depends‑on:** [T001, T004]
 
 ## `pre-commit` Framework Integration
-- [ ] **T009 · Feature · P1: create and configure `.pre-commit-hooks.yaml` file**
+- [x] **T009 · Feature · P1: create and configure `.pre-commit-hooks.yaml` file**
     - **Context:** Implementation Steps 2; Public Interfaces / Contracts
     - **Action:**
         1. Create a new file named `.pre-commit-hooks.yaml` in the root of the Bouncer repository.
