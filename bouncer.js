@@ -38,10 +38,52 @@ function parseArguments() {
 // Parse command line arguments
 const cliArgs = parseArguments();
 
-// Determine env file path (use CLI arg or default)
+// Determine file paths from CLI args or defaults
 const envFilePath = cliArgs["env-file"]
   ? path.resolve(cliArgs["env-file"])
   : path.resolve("./.env");
+
+const rulesFilePath = cliArgs["rules-file"]
+  ? path.resolve(cliArgs["rules-file"])
+  : path.resolve("./rules.md");
+
+const logFilePath = cliArgs["log-file"]
+  ? path.resolve(cliArgs["log-file"])
+  : path.resolve("./.bouncer.log.jsonl");
+
+/**
+ * Log API key error and exit
+ * @param {string} errorMessage - The error message to log
+ * @param {string[]} consoleMessages - Additional messages to display on console
+ */
+async function handleApiKeyError(errorMessage, consoleMessages) {
+  console.error(`\n🔑 Error: ${errorMessage}`);
+  console.error(`Tried loading from: ${envFilePath}`);
+
+  // Display additional console messages if provided
+  if (consoleMessages && consoleMessages.length) {
+    consoleMessages.forEach(msg => console.error(msg));
+  }
+
+  // Log the error to the configured log file
+  try {
+    await fs.appendFile(
+      logFilePath,
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        commit: "<api-key-error>",
+        verdict: "ERROR",
+        reason: `API Key Error: ${errorMessage}`,
+        source: envFilePath
+      }) + "\n"
+    );
+  } catch (logError) {
+    console.warn(`\n⚠️ Warning: Could not write to log file at ${logFilePath}`);
+    console.warn(`Error: ${logError.message}`);
+  }
+
+  process.exit(1);
+}
 
 // Load environment variables from the specified file
 try {
@@ -64,11 +106,30 @@ try {
 
 // Check if API key exists and validate
 if (!process.env.GEMINI_API_KEY) {
-  console.error("\n🔑 Error: Missing Gemini API key");
-  console.error(`Tried loading from: ${envFilePath}`);
-  console.error("Please add your API key to your .env file: GEMINI_API_KEY=your_key_here");
-  console.error("Or set it as an environment variable before running the script.");
-  process.exit(1);
+  await handleApiKeyError(
+    "Missing Gemini API key",
+    [
+      "Please add your API key to your .env file: GEMINI_API_KEY=your_key_here",
+      "Or set it as an environment variable before running the script."
+    ]
+  );
+} else if (process.env.GEMINI_API_KEY.trim() === "") {
+  await handleApiKeyError(
+    "Empty Gemini API key",
+    [
+      "Your API key is empty. Please provide a valid Gemini API key.",
+      "Add it to your .env file: GEMINI_API_KEY=your_key_here"
+    ]
+  );
+} else if (process.env.GEMINI_API_KEY.length < 20) {
+  // Gemini API keys are typically long; this is a simple check for obviously invalid keys
+  await handleApiKeyError(
+    "Gemini API key appears to be invalid (too short)",
+    [
+      "Your API key appears to be invalid. Please check that you have the correct Gemini API key.",
+      "You can generate a new API key at https://aistudio.google.com/app/apikey"
+    ]
+  );
 }
 
 const AI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -140,16 +201,6 @@ try {
   // Handle case where there's no commit history yet
   commit = "<new>";
 }
-
-// Determine rules file path (use CLI arg or default)
-const rulesFilePath = cliArgs["rules-file"]
-  ? path.resolve(cliArgs["rules-file"])
-  : path.resolve("./rules.md");
-
-// Determine log file path (use CLI arg or default)
-const logFilePath = cliArgs["log-file"]
-  ? path.resolve(cliArgs["log-file"])
-  : path.resolve("./.bouncer.log.jsonl");
 
 // Read rules from the specified file
 let rules;

@@ -52,7 +52,7 @@
     - **Depends‑on:** [T001]
 
 ## `bouncer.js` Error Handling
-- [ ] **T005 · Feature · P1: implement error handling for missing/invalid `GEMINI_API_KEY`**
+- [x] **T005 · Feature · P1: implement error handling for missing/invalid `GEMINI_API_KEY`**
     - **Context:** Error & Edge-Case Strategy; Implementation Steps 3
     - **Action:**
         1. In `bouncer.js`, after attempting to load the `.env` file, check if `process.env.GEMINI_API_KEY` is missing or invalid (e.g., empty).
