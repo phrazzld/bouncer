@@ -37,7 +37,7 @@
         1. Create a custom `.env` file at a non-default path, run `bouncer.js` with `--env-file` pointing to it, and verify `GEMINI_API_KEY` is loaded.
     - **Depends‑on:** [T001]
 
-- [ ] **T004 · Feature · P1: implement `--log-file` argument and ensure structured audit logging**
+- [x] **T004 · Feature · P1: implement `--log-file` argument and ensure structured audit logging**
     - **Context:** Implementation Steps 1.4, 1.5; Architecture Blueprint (`.bouncer.log.jsonl`)
     - **Action:**
         1. Modify `bouncer.js` to accept a `--log-file <path>` CLI argument, defaulting to `./.bouncer.log.jsonl`.

@@ -146,6 +146,11 @@ const rulesFilePath = cliArgs["rules-file"]
   ? path.resolve(cliArgs["rules-file"])
   : path.resolve("./rules.md");
 
+// Determine log file path (use CLI arg or default)
+const logFilePath = cliArgs["log-file"]
+  ? path.resolve(cliArgs["log-file"])
+  : path.resolve("./.bouncer.log.jsonl");
+
 // Read rules from the specified file
 let rules;
 try {
@@ -200,17 +205,22 @@ try {
     tokenUsage.originalDiffTokens = diffInfo.originalTokenCount;
   }
 
-  // Log the verdict, response, and usage metadata to .bouncer.log.jsonl
-  await fs.appendFile(
-    ".bouncer.log.jsonl",
-    JSON.stringify({
-      ts: new Date().toISOString(),
-      commit,
-      verdict,
-      reason: res.text,
-      usage: tokenUsage
-    }) + "\n"
-  );
+  // Log the verdict, response, and usage metadata to the configured log file
+  try {
+    await fs.appendFile(
+      logFilePath,
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        commit,
+        verdict,
+        reason: res.text,
+        usage: tokenUsage
+      }) + "\n"
+    );
+  } catch (error) {
+    console.warn(`\n⚠️ Warning: Could not write to log file at ${logFilePath}`);
+    console.warn(`Error: ${error.message}`);
+  }
 
   // Display appropriate console output based on verdict and exit accordingly
   if (verdict === "FAIL") {
@@ -267,20 +277,25 @@ try {
   }
 
   // Log the error to the audit trail with token count information
-  await fs.appendFile(
-    ".bouncer.log.jsonl",
-    JSON.stringify({
-      ts: new Date().toISOString(),
-      commit,
-      verdict: "ERROR",
-      reason: `API Error: ${error.message || 'Unknown error'}`,
-      usage: {
-        diffTokens: diffInfo.tokenCount,
-        truncated: diffInfo.truncated || false,
-        ...(diffInfo.truncated && { originalDiffTokens: diffInfo.originalTokenCount })
-      }
-    }) + "\n"
-  );
+  try {
+    await fs.appendFile(
+      logFilePath,
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        commit,
+        verdict: "ERROR",
+        reason: `API Error: ${error.message || 'Unknown error'}`,
+        usage: {
+          diffTokens: diffInfo.tokenCount,
+          truncated: diffInfo.truncated || false,
+          ...(diffInfo.truncated && { originalDiffTokens: diffInfo.originalTokenCount })
+        }
+      }) + "\n"
+    );
+  } catch (logError) {
+    console.warn(`\n⚠️ Warning: Could not write to log file at ${logFilePath}`);
+    console.warn(`Error: ${logError.message}`);
+  }
 
   // Exit with error code
   process.exit(1);
