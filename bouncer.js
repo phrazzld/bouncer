@@ -138,6 +138,96 @@ const AI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const TOKEN_LIMIT_THRESHOLD = 800000; // Conservative limit leaving buffer for prompt and rules
 const FALLBACK_AVERAGE_CHARS_PER_TOKEN = 3.5; // Fallback for estimation if token counting fails
 
+/**
+ * Log Gemini API error and exit
+ * @param {string} operation - The API operation that failed (e.g., "content generation", "token counting")
+ * @param {Error} error - The error object from the API
+ * @param {Object} metadata - Additional metadata to include in the log
+ * @param {boolean} shouldExit - Whether to exit the process (default: true)
+ */
+async function handleGeminiApiError(operation, error, metadata = {}, shouldExit = true) {
+  console.error(`\n❌ Error calling Gemini API (${operation}):`);
+
+  let errorType = "Unknown";
+  let errorMessage = "";
+  let suggestedAction = "";
+
+  // Categorize the error and provide helpful messages
+  if (error.status) {
+    // API responded with an error status
+    if (error.status === 401 || error.status === 403) {
+      errorType = "Authentication";
+      errorMessage = "Invalid API key or insufficient permissions.";
+      suggestedAction = "Check your Gemini API key and ensure it has proper permissions.";
+    } else if (error.status === 429) {
+      errorType = "Rate Limit";
+      errorMessage = "Rate limit or quota exceeded for Gemini API.";
+      suggestedAction = "Try again later or check your API usage limits at https://aistudio.google.com/app/apikey.";
+    } else if (error.status >= 500) {
+      errorType = "Server";
+      errorMessage = "Gemini API is currently experiencing issues.";
+      suggestedAction = "Please try again later when the service is stable.";
+    } else {
+      errorType = `API (${error.status})`;
+      errorMessage = error.message || 'Unknown error';
+      suggestedAction = "Check the error message for details or try again later.";
+    }
+  } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+    // Network error
+    errorType = "Network";
+    errorMessage = "Could not connect to Gemini API.";
+    suggestedAction = "Check your internet connection and try again.";
+  } else if (error.code === 'ETIMEDOUT') {
+    // Timeout error
+    errorType = "Timeout";
+    errorMessage = "The Gemini API is taking too long to respond.";
+    suggestedAction = "Try again later when the service might be less busy.";
+  } else if (error.message && error.message.includes("quota")) {
+    // Quota error - look for messaging about quotas in the error
+    errorType = "Quota";
+    errorMessage = "Your Gemini API quota has been exceeded.";
+    suggestedAction = "Check your quota limits at https://aistudio.google.com/app/apikey.";
+  } else {
+    // Unexpected error
+    errorType = "Unexpected";
+    errorMessage = error.message || String(error);
+    suggestedAction = "Check your configuration and try again.";
+  }
+
+  // Display the error information
+  console.error(`${errorType} error: ${errorMessage}`);
+  console.error(`Suggested action: ${suggestedAction}`);
+
+  // Log the error to the configured log file
+  try {
+    await fs.appendFile(
+      logFilePath,
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        commit: metadata.commit || "<gemini-api-error>",
+        verdict: "ERROR",
+        reason: `Gemini API Error: ${errorType} - ${errorMessage}`,
+        operation: operation,
+        error: {
+          type: errorType,
+          message: errorMessage,
+          code: error.code,
+          status: error.status
+        },
+        ...metadata
+      }) + "\n"
+    );
+  } catch (logError) {
+    console.warn(`\n⚠️ Warning: Could not write to log file at ${logFilePath}`);
+    console.warn(`Error: ${logError.message}`);
+  }
+
+  // Exit if required
+  if (shouldExit) {
+    process.exit(1);
+  }
+}
+
 // Function to get accurate token count using Gemini API
 async function getTokenCount(text) {
   try {
@@ -147,7 +237,10 @@ async function getTokenCount(text) {
     });
     return countTokensResponse.totalTokens;
   } catch (error) {
-    // If token counting fails, fall back to estimation
+    // If token counting fails, log the error but don't exit
+    await handleGeminiApiError("token counting", error, {}, false);
+
+    // Fall back to estimation
     console.warn("Warning: Token counting API failed, falling back to estimation");
     return Math.ceil(text.length / FALLBACK_AVERAGE_CHARS_PER_TOKEN);
   }
@@ -342,53 +435,16 @@ try {
   }
 
 } catch (error) {
-  // Handle different error types
-  console.error("\n❌ Error calling Gemini API:");
-
-  if (error.status) {
-    // API responded with an error status
-    if (error.status === 401 || error.status === 403) {
-      console.error("Authentication error: Invalid API key or insufficient permissions.");
-      console.error("Please check your Gemini API key and ensure it has proper permissions.");
-    } else if (error.status >= 500) {
-      console.error("Gemini API is currently experiencing issues. Please try again later.");
-    } else {
-      console.error(`API error (${error.status}): ${error.message || 'Unknown error'}`);
+  // Handle the API error with our centralized error handler
+  // Include diffInfo in the metadata for logging
+  await handleGeminiApiError("content generation", error, {
+    commit,
+    usage: {
+      diffTokens: diffInfo.tokenCount,
+      truncated: diffInfo.truncated || false,
+      ...(diffInfo.truncated && { originalDiffTokens: diffInfo.originalTokenCount })
     }
-  } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
-    // Network error
-    console.error("Network error: Could not connect to Gemini API.");
-    console.error("Please check your internet connection and try again.");
-  } else if (error.code === 'ETIMEDOUT') {
-    // Timeout error
-    console.error("Request timed out. The Gemini API is taking too long to respond.");
-    console.error("Please try again later when the service might be less busy.");
-  } else {
-    // Unexpected error
-    console.error(`Unexpected error: ${error.message || error}`);
-  }
+  });
 
-  // Log the error to the audit trail with token count information
-  try {
-    await fs.appendFile(
-      logFilePath,
-      JSON.stringify({
-        ts: new Date().toISOString(),
-        commit,
-        verdict: "ERROR",
-        reason: `API Error: ${error.message || 'Unknown error'}`,
-        usage: {
-          diffTokens: diffInfo.tokenCount,
-          truncated: diffInfo.truncated || false,
-          ...(diffInfo.truncated && { originalDiffTokens: diffInfo.originalTokenCount })
-        }
-      }) + "\n"
-    );
-  } catch (logError) {
-    console.warn(`\n⚠️ Warning: Could not write to log file at ${logFilePath}`);
-    console.warn(`Error: ${logError.message}`);
-  }
-
-  // Exit with error code
-  process.exit(1);
+  // handleGeminiApiError will exit the process, so no code after this will execute
 }

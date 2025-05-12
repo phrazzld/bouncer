@@ -78,7 +78,7 @@
         1. Run `bouncer.js` with the `--rules-file` pointing to a non-existent or unreadable file and verify console output, exit code, and log entry.
     - **Depends‑on:** [T001, T002, T004]
 
-- [ ] **T007 · Feature · P1: implement error handling for gemini api communication errors**
+- [x] **T007 · Feature · P1: implement error handling for gemini api communication errors**
     - **Context:** Error & Edge-Case Strategy; Implementation Steps 3
     - **Action:**
         1. In `bouncer.js`, wrap calls to the `@google/genai` API in try-catch blocks to handle network issues, authentication failures, quota limits, etc.
