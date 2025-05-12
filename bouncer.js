@@ -281,9 +281,118 @@ async function handlePotentiallyLargeDiff(diff) {
   };
 }
 
+/**
+ * Log Git command error and exit
+ * @param {string} command - The Git command that failed
+ * @param {Error} error - The original error object
+ * @param {string[]} consoleMessages - Additional messages to display on console
+ */
+async function handleGitCommandError(command, error, consoleMessages = []) {
+  console.error(`\n🔄 Error: Git command failed: ${command}`);
+
+  let errorType = "Unknown";
+  let errorMessage = error.message || String(error);
+  let suggestedAction = "";
+
+  // Determine error type and suggested actions based on error code or message
+  if (error.code === 'ENOENT') {
+    errorType = "Not Found";
+    errorMessage = "Git executable not found in PATH.";
+    suggestedAction = "Please ensure Git is installed and available in your PATH.";
+  } else if (error.message && (
+      error.message.toLowerCase().includes("not a git repository") ||
+      error.message.toLowerCase().includes("not found") && error.message.toLowerCase().includes(".git")
+    )) {
+    errorType = "Repository";
+    errorMessage = "Not a git repository (or any of the parent directories).";
+    suggestedAction = "Please run bouncer in a Git repository directory.";
+  } else if (error.message && (
+      error.message.toLowerCase().includes("did not match any files") ||
+      error.message.toLowerCase().includes("no staged changes") ||
+      error.message.toLowerCase().includes("no changes added to commit")
+    )) {
+    errorType = "No Changes";
+    errorMessage = "No staged changes found.";
+    suggestedAction = "Add files to the staging area with 'git add' before running bouncer.";
+  } else if (error.message && error.message.toLowerCase().includes("not a valid object name")) {
+    errorType = "No Commits";
+    errorMessage = "No commit history found.";
+    // This is not fatal for git diff, so we can handle it differently
+  } else {
+    errorType = "Command";
+    suggestedAction = "Check the error message and your Git configuration.";
+  }
+
+  // Display error information
+  console.error(`${errorType} error: ${errorMessage}`);
+  if (suggestedAction) {
+    console.error(`Suggested action: ${suggestedAction}`);
+  }
+
+  // Display additional console messages if provided
+  if (consoleMessages && consoleMessages.length) {
+    consoleMessages.forEach(msg => console.error(msg));
+  }
+
+  // Log the error to the configured log file
+  try {
+    await fs.appendFile(
+      logFilePath,
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        commit: "<git-command-error>",
+        verdict: "ERROR",
+        reason: `Git Command Error: ${errorType} - ${errorMessage}`,
+        command: command,
+        error: {
+          type: errorType,
+          message: errorMessage,
+          code: error.code
+        }
+      }) + "\n"
+    );
+  } catch (logError) {
+    console.warn(`\n⚠️ Warning: Could not write to log file at ${logFilePath}`);
+    console.warn(`Error: ${logError.message}`);
+  }
+
+  process.exit(1);
+}
+
+// First check if we're in a git repository
+try {
+  execSync("git rev-parse --is-inside-work-tree", { encoding: "utf8" });
+} catch (error) {
+  // Not in a git repository
+  await handleGitCommandError(
+    "git rev-parse --is-inside-work-tree",
+    error,
+    [
+      "Bouncer must be run from within a Git repository.",
+      "Please navigate to a Git repository directory before running bouncer."
+    ]
+  );
+}
+
 // Retrieve the staged diff and handle potential truncation
-const rawDiff = execSync("git diff --cached --unified=0", { encoding: "utf8" });
-// Note: This returns a promise now that needs to be awaited
+let rawDiff;
+try {
+  rawDiff = execSync("git diff --cached --unified=0", { encoding: "utf8" });
+  if (!rawDiff || rawDiff.trim() === "") {
+    await handleGitCommandError(
+      "git diff --cached",
+      new Error("No staged changes found"),
+      [
+        "There are no staged changes to review.",
+        "Use 'git add <files>' to stage changes before running bouncer."
+      ]
+    );
+  }
+} catch (error) {
+  await handleGitCommandError("git diff --cached", error);
+}
+
+// Process the diff (this returns a promise that needs to be awaited)
 const diffInfo = await handlePotentiallyLargeDiff(rawDiff);
 
 // Retrieve the current commit hash
@@ -291,7 +400,8 @@ let commit;
 try {
   commit = execSync("git rev-parse --verify HEAD", { encoding: "utf8" }).trim();
 } catch (error) {
-  // Handle case where there's no commit history yet
+  // Handle case where there's no commit history yet - not fatal
+  console.warn("Warning: Unable to get current commit hash. Using placeholder.");
   commit = "<new>";
 }
 

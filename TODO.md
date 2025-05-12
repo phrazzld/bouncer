@@ -91,7 +91,7 @@
         1. Mock the `@google/genai` client to throw various errors and verify console output, exit code, and log entries.
     - **Depends‑on:** [T001, T004]
 
-- [ ] **T008 · Feature · P2: implement error handling for `git diff --cached` command failures**
+- [x] **T008 · Feature · P2: implement error handling for `git diff --cached` command failures**
     - **Context:** Risk Assessment (`git diff` command fails or behaves unexpectedly); Implementation Steps 3
     - **Action:**
         1. In `bouncer.js`, when executing `git diff --cached`, catch any errors from the child process execution.
