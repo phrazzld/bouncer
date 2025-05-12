@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 
 /**
  * Parse command line arguments from process.argv
- * Supports both flag arguments (--flag) and key-value pairs (--key value)
+ * Supports flag arguments (--flag), key-value pairs (--key value), and equals syntax (--key=value)
  * @returns {Object} Object containing parsed arguments
  */
 function parseArguments() {
@@ -19,15 +19,22 @@ function parseArguments() {
 
     // Check if argument is a flag/key (starts with --)
     if (arg.startsWith('--')) {
-      const key = arg.slice(2); // Remove the leading --
-
-      // Check if next item exists and is not another flag
-      if (i + 1 < argv.length && !argv[i + 1].startsWith('--')) {
-        args[key] = argv[i + 1];
-        i++; // Skip the value in the next iteration
+      // Check if arg contains an equals sign (--key=value)
+      if (arg.includes('=')) {
+        const [fullKey, value] = arg.split('=', 2);
+        const key = fullKey.slice(2); // Remove the leading --
+        args[key] = value;
       } else {
-        // It's a flag without a value
-        args[key] = true;
+        const key = arg.slice(2); // Remove the leading --
+
+        // Check if next item exists and is not another flag
+        if (i + 1 < argv.length && !argv[i + 1].startsWith('--')) {
+          args[key] = argv[i + 1];
+          i++; // Skip the value in the next iteration
+        } else {
+          // It's a flag without a value
+          args[key] = true;
+        }
       }
     }
   }

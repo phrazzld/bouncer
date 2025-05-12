@@ -119,7 +119,7 @@
     - **Depends‑on:** none
 
 ## Testing
-- [ ] **T010 · Test · P1: add unit tests for CLI argument parsing and path handling**
+- [x] **T010 · Test · P1: add unit tests for CLI argument parsing and path handling**
     - **Context:** Testing Strategy: Unit Tests, Implementation Steps 1
     - **Action:**
         1. Add tests to cover all argument combinations and default handling.
