@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { GoogleGenAI } from "@google/genai";
-import "dotenv/config";
+import dotenv from "dotenv";
 
 /**
  * Parse command line arguments from process.argv
@@ -38,10 +38,35 @@ function parseArguments() {
 // Parse command line arguments
 const cliArgs = parseArguments();
 
+// Determine env file path (use CLI arg or default)
+const envFilePath = cliArgs["env-file"]
+  ? path.resolve(cliArgs["env-file"])
+  : path.resolve("./.env");
+
+// Load environment variables from the specified file
+try {
+  const result = dotenv.config({ path: envFilePath });
+
+  if (result.error) {
+    throw result.error;
+  }
+} catch (error) {
+  // Only warn if file doesn't exist - it's common to rely on system environment variables instead
+  if (error.code === 'ENOENT') {
+    console.warn(`\n⚠️ Warning: Environment file not found at ${envFilePath}`);
+    console.warn("Will use system environment variables only.");
+  } else {
+    console.error(`\n🔑 Error: Could not load environment file at ${envFilePath}`);
+    console.error(`${error.message}`);
+    console.error("Please ensure the environment file exists and is readable.");
+  }
+}
+
 // Check if API key exists and validate
 if (!process.env.GEMINI_API_KEY) {
   console.error("\n🔑 Error: Missing Gemini API key");
-  console.error("Please add your API key to .env file: GEMINI_API_KEY=your_key_here");
+  console.error(`Tried loading from: ${envFilePath}`);
+  console.error("Please add your API key to your .env file: GEMINI_API_KEY=your_key_here");
   console.error("Or set it as an environment variable before running the script.");
   process.exit(1);
 }

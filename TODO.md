@@ -24,7 +24,7 @@
         2. Run `bouncer.js` without `--rules-file` and verify it attempts to read `./rules.md`.
     - **Depends‑on:** [T001]
 
-- [ ] **T003 · Feature · P1: add `--env-file` cli argument support**
+- [x] **T003 · Feature · P1: add `--env-file` cli argument support**
     - **Context:** Implementation Steps 1.3, 1.5
     - **Action:**
         1. Modify `bouncer.js` to accept an `--env-file <path>` CLI argument.
