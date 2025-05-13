@@ -143,7 +143,7 @@
         1. Run test suite and simulate failures; verify output and logs.
     - **Depends‑on:** [T005, T006, T007, T008]
 
-- [ ] **T012 · Test · P0: implement integration tests for pre-commit hook in a temp git repo**
+- [x] **T012 · Test · P0: implement integration tests for pre-commit hook in a temp git repo**
     - **Context:** Testing Strategy: Integration Tests
     - **Action:**
         1. Set up temp repo, install pre-commit, configure Bouncer hook.

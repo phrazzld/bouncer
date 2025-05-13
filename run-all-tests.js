@@ -13,7 +13,8 @@ const TEST_FILES = [
   "./test-git-errors.js",
   "./test-cli-args.js",
   "./test-exit-codes.js",
-  "./test-gemini-api-errors.js"
+  "./test-gemini-api-errors.js",
+  "./test-integration.js"
 ];
 
 // Function to run a single test file
