@@ -4,6 +4,7 @@ package-lock.json
 
 # Environment and secrets
 .env
+.env.*
 **/.claude/settings.local.json
 
 # Logs

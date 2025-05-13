@@ -1,0 +1,8 @@
+- id: bouncer-check
+  name: Bouncer AI Pre-commit Check
+  description: Analyzes git diffs using Gemini AI against configurable rules.
+  entry: node bouncer.js
+  language: node
+  language_version: '18.0'
+  pass_filenames: false
+  additional_dependencies: ['@google/genai:^0.13.0', 'dotenv:^16.5.0']
