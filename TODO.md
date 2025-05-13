@@ -131,7 +131,7 @@
         1. Run test suite, confirm coverage and all tests pass.
     - **Depends‑on:** [T001, T002, T003, T004]
 
-- [ ] **T011 · Test · P1: add unit tests for error handling and exit codes**
+- [x] **T011 · Test · P1: add unit tests for error handling and exit codes**
     - **Context:** Testing Strategy: Unit Tests, Implementation Steps 3
     - **Action:**
         1. Add tests that simulate missing/invalid API key, missing/unreadable rules file, Gemini API errors.

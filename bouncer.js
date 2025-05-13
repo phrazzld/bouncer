@@ -238,6 +238,13 @@ async function handleGeminiApiError(operation, error, metadata = {}, shouldExit 
 // Function to get accurate token count using Gemini API
 async function getTokenCount(text) {
   try {
+    // Support for token counting error simulation in testing
+    if (process.env.TEST_SIMULATE_ERROR === 'token-counting') {
+      const error = new Error('Simulated token counting error');
+      error.status = 500;
+      throw error;
+    }
+
     const countTokensResponse = await AI.models.countTokens({
       model: "gemini-2.5-flash-preview-04-17",
       contents: text,
@@ -384,16 +391,21 @@ try {
 // Retrieve the staged diff and handle potential truncation
 let rawDiff;
 try {
-  rawDiff = execSync("git diff --cached --unified=0", { encoding: "utf8" });
-  if (!rawDiff || rawDiff.trim() === "") {
-    await handleGitCommandError(
-      "git diff --cached",
-      new Error("No staged changes found"),
-      [
-        "There are no staged changes to review.",
-        "Use 'git add <files>' to stage changes before running bouncer."
-      ]
-    );
+  // Support for test mode with empty diff
+  if (process.env.TEST_EMPTY_DIFF === 'true') {
+    rawDiff = "diff --git a/test.md b/test.md\nindex 1234567..abcdefg 100644\n--- a/test.md\n+++ b/test.md\n@@ -0,0 +1 @@\n+Test diff for API error testing\n";
+  } else {
+    rawDiff = execSync("git diff --cached --unified=0", { encoding: "utf8" });
+    if (!rawDiff || rawDiff.trim() === "") {
+      await handleGitCommandError(
+        "git diff --cached",
+        new Error("No staged changes found"),
+        [
+          "There are no staged changes to review.",
+          "Use 'git add <files>' to stage changes before running bouncer."
+        ]
+      );
+    }
   }
 } catch (error) {
   await handleGitCommandError("git diff --cached", error);
@@ -482,6 +494,29 @@ And give a brief justification (<40 words).`;
 // Call the Gemini API with the prompt
 let res;
 try {
+  // Support for simulated errors in testing
+  if (process.env.TEST_SIMULATE_ERROR === 'auth-401') {
+    const error = new Error('Simulated authentication error');
+    error.status = 401;
+    throw error;
+  } else if (process.env.TEST_SIMULATE_ERROR === 'rate-limit-429') {
+    const error = new Error('Simulated rate limit exceeded');
+    error.status = 429;
+    throw error;
+  } else if (process.env.TEST_SIMULATE_ERROR === 'server-500') {
+    const error = new Error('Simulated server error');
+    error.status = 500;
+    throw error;
+  } else if (process.env.TEST_SIMULATE_ERROR === 'network-enotfound') {
+    const error = new Error('getaddrinfo ENOTFOUND api.gemini.com');
+    error.code = 'ENOTFOUND';
+    throw error;
+  } else if (process.env.TEST_SIMULATE_ERROR === 'timeout-etimedout') {
+    const error = new Error('Connection timed out');
+    error.code = 'ETIMEDOUT';
+    throw error;
+  }
+
   res = await AI.models.generateContent({
     model: "gemini-2.5-flash-preview-04-17",
     contents: prompt,
@@ -492,7 +527,17 @@ try {
   const usageMetadata = res.usageMetadata;
 
   // Parse the response to determine the verdict (PASS or FAIL)
-  const verdict = /PASS/i.test(res.text) ? "PASS" : "FAIL";
+  // Support for forced verdict in testing
+  let verdict;
+  if (process.env.TEST_FORCE_PASS === 'true') {
+    verdict = "PASS";
+    res.text = "PASS – Test forced pass";
+  } else if (process.env.TEST_FORCE_FAIL === 'true') {
+    verdict = "FAIL";
+    res.text = "FAIL – Test forced fail";
+  } else {
+    verdict = /PASS/i.test(res.text) ? "PASS" : "FAIL";
+  }
 
   // Prepare token usage information for logging
   const tokenUsage = {
