@@ -157,7 +157,7 @@
     - **Depends‑on:** [T001, T002, T003, T004, T005, T006, T007, T008, T009]
 
 ## Documentation (`README.md`)
-- [ ] **T013 · Feature · P0: update README.md with pre-commit installation and configuration instructions**
+- [x] **T013 · Feature · P0: update README.md with pre-commit installation and configuration instructions**
     - **Context:** Implementation Steps 4.1-4.2
     - **Action:**
         1. Add installation steps for `pre-commit` and Bouncer hook configuration.
@@ -170,7 +170,7 @@
         1. Follow instructions from scratch and confirm successful install in a test repo.
     - **Depends‑on:** [T009]
 
-- [ ] **T014 · Chore · P0: add explicit warning to add `.env` file to `.gitignore`**
+- [x] **T014 · Chore · P0: add explicit warning to add `.env` file to `.gitignore`**
     - **Context:** Risk Assessment (User commits `.env` file with API key)
     - **Action:**
         1. Add a prominent and critical warning in the "Configuration" section of `README.md` instructing users to add their `.env` file (or custom-named env file) to their project's `.gitignore`.
@@ -180,7 +180,7 @@
         1. Review README.md for placement and clarity.
     - **Depends‑on:** [T013]
 
-- [ ] **T015 · Chore · P1: add updating and troubleshooting sections to README.md**
+- [x] **T015 · Chore · P1: add updating and troubleshooting sections to README.md**
     - **Context:** Implementation Steps 4.3-4.4
     - **Action:**
         1. Add update/upgrade instructions for Bouncer versioning, explaining how to change the `rev:` value in `.pre-commit-config.yaml`.
