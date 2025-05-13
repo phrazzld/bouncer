@@ -192,7 +192,7 @@
     - **Depends‑on:** [T013]
 
 ## Version Tagging and Release
-- [ ] **T016 · Chore · P1: create git tag for new release upon completion**
+- [~] **T016 · Chore · P1: create git tag for new release upon completion**
     - **Context:** Final Deliverables
     - **Action:**
         1. Tag release commit with semantic version (e.g., v1.0.0) after all work is merged.
